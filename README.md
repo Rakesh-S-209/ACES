@@ -103,7 +103,7 @@ I strengthened my skills in threat modelling, secure coding, event-driven archit
 
 All three layers feed into a unified SOC dashboard with live WebSocket streaming. A Kali Linux attacker performs reconnaissance, triggers honeypots, and is automatically quarantined — while a SOC analyst watches every step in real time.
 
-→ [View Full Project Report](#project-report)
+→ [View Full Project Report](https://github.com/Rakesh-S-209/ACES/blob/main/COURSE_REPORT.pdf)
 
 ## Technologies Used
 
