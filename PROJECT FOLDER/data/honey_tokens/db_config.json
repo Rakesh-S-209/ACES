@@ -1,0 +1,8 @@
+{
+  "host": "db-internal.corp.local",
+  "port": 5434,
+  "database": "operations_db",
+  "username": "svc_app_user",
+  "password": "S3cur3P@ssw0rd!2024",
+  "_note": "Internal service account \u2014 do not share"
+}

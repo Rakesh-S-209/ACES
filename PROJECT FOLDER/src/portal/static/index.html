@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>NorthStar Capital</title>
+<style>
+:root{
+  --bg:#07090f;--s:#0d1117;--s2:#161b22;--bd:#21262d;
+  --ac:#4f8ef7;--dr:#f85149;--ok:#3fb950;--wn:#e3b341;
+  --tx:#c9d1d9;--mu:#8b949e;--muted2:#4d5566;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;display:flex;flex-direction:column}
+
+/* ── NAV ── */
+nav{background:var(--s);border-bottom:1px solid var(--bd);padding:0 32px;display:flex;align-items:center;height:52px;gap:28px;position:sticky;top:0;z-index:100}
+.nav-logo{font-size:16px;font-weight:800;color:var(--ac);letter-spacing:.02em;margin-right:16px}
+.nav-logo span{color:var(--tx);font-weight:400}
+.nav-links{display:flex;gap:24px;align-items:center}
+.nav-links a{color:var(--mu);text-decoration:none;font-size:13px;transition:color .15s}
+.nav-links a:hover{color:var(--tx)}
+.nav-right{margin-left:auto;display:flex;gap:10px;align-items:center}
+.btn-ghost{padding:6px 16px;border-radius:7px;border:1px solid var(--bd);background:transparent;color:var(--tx);font-size:13px;cursor:pointer;transition:border-color .15s}
+.btn-ghost:hover{border-color:var(--ac);color:var(--ac)}
+.btn-solid{padding:6px 16px;border-radius:7px;border:none;background:var(--ac);color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.btn-solid:hover{opacity:.88}
+
+/* ── HERO ── */
+.hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 24px 40px;text-align:center}
+.hero-eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ac);margin-bottom:16px}
+.hero-title{font-size:clamp(28px,5vw,52px);font-weight:800;line-height:1.18;max-width:780px;margin-bottom:20px}
+.hero-title em{font-style:normal;color:var(--ac)}
+.hero-sub{font-size:clamp(13px,1.6vw,16px);color:var(--mu);max-width:560px;line-height:1.75;margin-bottom:36px}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.btn-hero{padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s;border:none}
+.btn-hero-p{background:var(--ac);color:#fff}
+.btn-hero-p:hover{opacity:.88}
+.btn-hero-s{background:transparent;border:1px solid var(--bd);color:var(--tx)}
+.btn-hero-s:hover{border-color:var(--ac)}
+
+/* ── STATS ── */
+.stats{display:flex;justify-content:center;gap:48px;flex-wrap:wrap;padding:32px 24px;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd)}
+.stat{text-align:center}
+.stat-num{font-size:26px;font-weight:800;color:var(--ac)}
+.stat-lbl{font-size:11px;color:var(--mu);margin-top:2px;text-transform:uppercase;letter-spacing:.07em}
+
+/* ── FEATURES ── */
+.features{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;padding:40px 24px;max-width:1100px;margin:0 auto;width:100%}
+.feat{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:22px 20px;flex:1;min-width:200px;max-width:270px}
+.feat-icon{font-size:22px;margin-bottom:10px}
+.feat-title{font-size:13px;font-weight:700;margin-bottom:6px}
+.feat-body{font-size:12px;color:var(--mu);line-height:1.7}
+
+/* ── FOOTER ── */
+footer{background:var(--s);border-top:1px solid var(--bd);text-align:center;padding:14px;font-size:11px;color:var(--muted2)}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:200}
+.overlay.show{display:flex}
+.modal{background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:32px;width:100%;max-width:400px}
+.modal h2{font-size:15px;font-weight:700;margin-bottom:22px;text-align:center}
+.form-label{display:block;font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.form-input{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:10px 13px;color:var(--tx);font-size:13px;margin-bottom:14px;outline:none;transition:border-color .15s}
+.form-input:focus{border-color:var(--ac)}
+.form-btn{width:100%;padding:11px;border-radius:7px;border:none;background:var(--ac);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .15s;margin-top:4px}
+.form-btn:hover{opacity:.88}
+.form-err{min-height:20px;font-size:12px;margin-top:10px;text-align:center;color:var(--dr)}
+.modal-close{position:absolute;top:12px;right:16px;background:none;border:none;color:var(--mu);font-size:18px;cursor:pointer}
+.modal-wrap{position:relative}
+.tab-row{display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid var(--bd)}
+.tab{flex:1;padding:8px;text-align:center;font-size:12px;font-weight:600;color:var(--mu);cursor:pointer;border-bottom:2px solid transparent;transition:color .15s}
+.tab.active{color:var(--ac);border-bottom-color:var(--ac)}
+.tab-panel{display:none}
+.tab-panel.show{display:block}
+.switch-link{font-size:12px;color:var(--mu);text-align:center;margin-top:14px}
+.switch-link a{color:var(--ac);cursor:pointer;text-decoration:none}
+.switch-link a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+  <span class="nav-logo">&#9670; NorthStar <span>Capital</span></span>
+  <div class="nav-links">
+    <a href="#">Markets</a>
+    <a href="#">Solutions</a>
+    <a href="#">About</a>
+    <a href="#">Insights</a>
+  </div>
+  <div class="nav-right">
+    <button class="btn-ghost" onclick="openModal('login')">Sign In</button>
+    <button class="btn-solid" onclick="openModal('signup')">Open Account</button>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-eyebrow">Institutional-grade digital finance</div>
+  <h1 class="hero-title">Your capital.<br/><em>Managed with precision.</em></h1>
+  <p class="hero-sub">NorthStar Capital delivers alternative asset management and digital securities infrastructure to institutional clients across 40 markets worldwide.</p>
+  <div class="hero-btns">
+    <button class="btn-hero btn-hero-p" onclick="openModal('signup')">Open an Account</button>
+    <button class="btn-hero btn-hero-s" onclick="openModal('login')">Client Sign In</button>
+  </div>
+</section>
+
+<!-- ── STATS ── -->
+<div class="stats">
+  <div class="stat"><div class="stat-num">$4.2B</div><div class="stat-lbl">Assets Under Management</div></div>
+  <div class="stat"><div class="stat-num">40+</div><div class="stat-lbl">Markets Served</div></div>
+  <div class="stat"><div class="stat-num">16yr</div><div class="stat-lbl">Track Record</div></div>
+  <div class="stat"><div class="stat-num">99.97%</div><div class="stat-lbl">Platform Uptime</div></div>
+</div>
+
+<!-- ── FEATURES ── -->
+<div class="features">
+  <div class="feat"><div class="feat-icon">&#128200;</div><div class="feat-title">Alternative Assets</div><div class="feat-body">Access private equity, credit, and real assets through a single institutional-grade portal.</div></div>
+  <div class="feat"><div class="feat-icon">&#128274;</div><div class="feat-title">Bank-Grade Security</div><div class="feat-body">Zero-trust architecture with real-time anomaly detection protects every session and transaction.</div></div>
+  <div class="feat"><div class="feat-icon">&#9654;</div><div class="feat-title">Real-Time Execution</div><div class="feat-body">Sub-second settlement infrastructure across all supported asset classes and jurisdictions.</div></div>
+  <div class="feat"><div class="feat-icon">&#128202;</div><div class="feat-title">Analytics Dashboard</div><div class="feat-body">Comprehensive portfolio analytics with live P&amp;L attribution and risk exposure views.</div></div>
+</div>
+
+<footer>
+  &copy; 2024 NorthStar Capital Management Ltd. &nbsp;&bull;&nbsp; Regulated by the FCA &nbsp;&bull;&nbsp; All rights reserved.
+  <span style="color:#1e2430;margin-left:16px">A.C.E.S. v4.0 &mdash; Zero Trust Layer Active</span>
+</footer>
+
+<!-- ── AUTH MODAL ── -->
+<div class="overlay" id="overlay" onclick="closeOnBg(event)">
+  <div class="modal modal-wrap">
+    <button class="modal-close" onclick="closeModal()">&#10005;</button>
+    <div class="tab-row">
+      <div class="tab active" id="tab-login" onclick="switchTab('login')">Sign In</div>
+      <div class="tab" id="tab-signup" onclick="switchTab('signup')">Sign Up</div>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="tab-panel show" id="panel-login">
+      <label class="form-label" for="l-user">Username</label>
+      <input class="form-input" id="l-user" type="text" placeholder="Enter username" autocomplete="username" autofocus/>
+      <label class="form-label" for="l-pass">Password</label>
+      <input class="form-input" id="l-pass" type="password" placeholder="Enter password" autocomplete="current-password"/>
+      <button class="form-btn" id="l-btn" onclick="doLogin()">Sign In</button>
+      <div class="form-err" id="l-err"></div>
+    </div>
+
+    <!-- SIGNUP -->
+    <div class="tab-panel" id="panel-signup">
+      <label class="form-label" for="s-user">Username</label>
+      <input class="form-input" id="s-user" type="text" placeholder="Choose a username" autocomplete="username"/>
+      <label class="form-label" for="s-email">Email Address</label>
+      <input class="form-input" id="s-email" type="email" placeholder="your@email.com" autocomplete="email"/>
+      <label class="form-label" for="s-pass">Password</label>
+      <input class="form-input" id="s-pass" type="password" placeholder="Choose a password" autocomplete="new-password"/>
+      <button class="form-btn" id="s-btn" onclick="doSignup()">Create Account</button>
+      <div class="form-err" id="s-err"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = window.location.origin;
+
+function openModal(tab) {
+  switchTab(tab);
+  document.getElementById('overlay').classList.add('show');
+  setTimeout(() => {
+    const f = tab === 'login' ? document.getElementById('l-user') : document.getElementById('s-user');
+    if (f) f.focus();
+  }, 60);
+}
+function closeModal() { document.getElementById('overlay').classList.remove('show'); }
+function closeOnBg(e) { if (e.target.id === 'overlay') closeModal(); }
+
+function switchTab(tab) {
+  ['login','signup'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+    document.getElementById('panel-' + t).classList.toggle('show', t === tab);
+  });
+}
+
+async function doLogin() {
+  const u = document.getElementById('l-user').value.trim();
+  const p = document.getElementById('l-pass').value;
+  const err = document.getElementById('l-err');
+  const btn = document.getElementById('l-btn');
+  err.style.color = 'var(--dr)';
+  err.textContent = '';
+  if (!u || !p) { err.textContent = 'Please fill in all fields.'; return; }
+  btn.textContent = 'Signing in\u2026'; btn.disabled = true;
+  try {
+    const r = await fetch(API + '/api/login', {
+      method: 'POST', credentials: 'include',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({username: u, password: p}),
+    });
+    // Guard: parse JSON only if the response body is actually JSON.
+    // A non-JSON body (e.g. unexpected 500 HTML) would otherwise throw
+    // and leave the button disabled with no error message shown.
+    let d = {};
+    try { d = await r.json(); } catch (_) { /* body was not JSON */ }
+
+    if (r.status === 401 || !r.ok || d.error) {
+      // 401 = wrong credentials; any other non-OK = server error
+      err.textContent = r.status === 401
+        ? 'Invalid credentials. Please try again.'
+        : (d.error || 'Sign-in failed (' + r.status + '). Try again.');
+      btn.textContent = 'Sign In'; btn.disabled = false;
+      return;
+    }
+    sessionStorage.setItem('aces_role',  d.role);
+    sessionStorage.setItem('aces_user',  d.username);
+    sessionStorage.setItem('aces_token', d.token);
+    // Strict role-based routing:
+    //   engineer -> SOC triage board
+    //   admin    -> Admin controls panel (portal.html, admin tab)
+    //   user     -> Financial portal dashboard
+    if (d.role === 'engineer' || d.role === 'Engineer') {
+      window.location.replace('/app/soc-board');
+    } else if (d.role === 'admin' || d.role === 'Admin') {
+      window.location.replace('/app/admin');
+    } else {
+      window.location.replace('/app/dashboard');
+    }
+  } catch (ex) {
+    err.textContent = 'Server unreachable. Is run.py running?';
+    btn.textContent = 'Sign In'; btn.disabled = false;
+  }
+}
+
+async function doSignup() {
+  const u = document.getElementById('s-user').value.trim();
+  const e = document.getElementById('s-email').value.trim();
+  const p = document.getElementById('s-pass').value;
+  const err = document.getElementById('s-err');
+  const btn = document.getElementById('s-btn');
+  err.style.color = 'var(--dr)';
+  err.textContent = '';
+  if (!u || !e || !p) { err.textContent = 'Please fill in all fields.'; return; }
+  if (p.length < 8)   { err.textContent = 'Password must be at least 8 characters.'; return; }
+  btn.textContent = 'Creating...'; btn.disabled = true;
+  try {
+    const r = await fetch(API + '/api/register', {
+      method: 'POST', credentials: 'include',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({username: u, email: e, password: p}),
+    });
+    const d = await r.json();
+    if (r.status === 409) {
+      err.textContent = 'Username already exists. Please choose another.';
+      btn.textContent = 'Create Account'; btn.disabled = false;
+      return;
+    }
+    if (!r.ok || d.error) {
+      err.textContent = d.error || 'Registration failed. Please try again.';
+      btn.textContent = 'Create Account'; btn.disabled = false;
+      return;
+    }
+    err.style.color = 'var(--ok)';
+    err.textContent = 'Account created! You can now sign in.';
+    btn.textContent = 'Create Account'; btn.disabled = false;
+    // Switch to login tab after 1.5s
+    setTimeout(() => { switchTab('login'); document.getElementById('l-user').value = u; document.getElementById('l-user').focus(); }, 1500);
+  } catch {
+    err.textContent = 'Server unreachable. Is run.py running?';
+    btn.textContent = 'Create Account'; btn.disabled = false;
+  }
+}
+
+// Allow Enter key on login form
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const overlay = document.getElementById('overlay');
+  if (!overlay.classList.contains('show')) return;
+  const activePanel = document.querySelector('.tab-panel.show');
+  if (!activePanel) return;
+  if (activePanel.id === 'panel-login') doLogin();
+  else doSignup();
+});
+</script>
+</body>
+</html>

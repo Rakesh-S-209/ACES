@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>A.C.E.S. &mdash; SOC Command Center</title>
+<style>
+:root{
+  --bg:#060a0f;--s:#0d1117;--s2:#161b22;--s3:#1c2128;--bd:#21262d;
+  --ac:#4f8ef7;--dr:#f85149;--ok:#3fb950;--wn:#e3b341;
+  --tx:#c9d1d9;--mu:#8b949e;--muted2:#2e3a48;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-serif;font-size:13px;display:flex;flex-direction:column}
+
+/* ── HEADER ── */
+header{background:var(--s);border-bottom:1px solid var(--bd);padding:0 16px;height:48px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.logo{font-size:14px;font-weight:800;color:var(--dr);letter-spacing:.04em}
+.sub{font-size:10px;color:var(--mu)}
+.badge-mode{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:8px;font-size:10px;background:var(--s2);border:1px solid var(--bd);color:var(--mu)}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.dot-ok{background:var(--ok)}.dot-wn{background:var(--wn)}.dot-dr{background:var(--dr)}
+#ws-status{padding:3px 9px;border-radius:8px;font-size:10px;background:var(--s2);border:1px solid var(--bd);color:var(--mu)}
+#ws-status.live{background:#0d1f14;color:var(--ok);border-color:#1a4226}
+.hdr-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.user-badge{font-size:10px;color:var(--mu);padding:3px 8px;border:1px solid var(--bd);border-radius:8px}
+.btn-hdr{padding:4px 11px;background:transparent;border:1px solid var(--bd);border-radius:6px;color:var(--mu);cursor:pointer;font-size:11px;font-weight:600;transition:all .15s}
+.btn-hdr:hover{border-color:var(--dr);color:var(--dr)}
+
+/* ── PAGE NAV TABS ── */
+.page-nav{background:var(--s);border-bottom:2px solid var(--bd);display:flex;gap:0;flex-shrink:0;padding:0 16px}
+.tab-pg{padding:10px 20px;border:none;background:transparent;color:var(--mu);font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;display:flex;align-items:center;gap:6px}
+.tab-pg:hover{color:var(--tx)}
+.tab-pg.active{color:var(--ac);border-bottom-color:var(--ac)}
+.tab-pg .tab-badge{background:var(--dr);color:#fff;border-radius:8px;padding:0 5px;font-size:9px;font-weight:800}
+
+/* ── LAYOUT ── */
+.body-wrap{display:flex;flex:1;overflow:hidden}
+
+/* ── SIDEBAR METRICS ── */
+aside{width:180px;border-right:1px solid var(--bd);overflow-y:auto;padding:12px 8px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;background:var(--s)}
+.metric{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;text-align:center}
+.metric-val{font-size:22px;font-weight:800;color:var(--ac)}
+.metric-val.red{color:var(--dr)}.metric-val.wn{color:var(--wn)}
+.metric-lbl{font-size:10px;color:var(--mu);margin-top:2px;text-transform:uppercase;letter-spacing:.06em}
+.sidebar-btn{width:100%;padding:7px;background:transparent;border:1px solid var(--bd);border-radius:6px;color:var(--mu);cursor:pointer;font-size:11px;transition:all .15s}
+.sidebar-btn:hover{border-color:var(--ac);color:var(--ac)}
+
+/* ── PAGES ── */
+.page-wrap{flex:1;overflow:hidden;display:none;flex-direction:column}
+.page-wrap.show{display:flex}
+
+/* ── COMMON PANEL HDR ── */
+.panel-hdr{background:var(--s);border-bottom:1px solid var(--bd);padding:6px 12px;font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.panel-btn{padding:2px 8px;background:transparent;border:1px solid var(--bd);border-radius:4px;color:var(--mu);cursor:pointer;font-size:10px}
+.panel-btn:hover{border-color:var(--ac);color:var(--ac)}
+
+/* ── PAGE 1: ACTIVE LOGS ── */
+#pg-logs{flex-direction:column}
+#stream{flex:1;overflow-y:auto;padding:8px 12px;background:var(--bg);font-family:'Cascadia Code','Fira Code','Courier New',monospace;font-size:11px;min-height:0}
+.ll{line-height:1.7;white-space:pre-wrap;word-break:break-all;padding:1px 0}
+.ts{color:var(--muted2)}.lv{font-weight:700;padding:0 5px}
+.lc{color:var(--dr)}.lw{color:var(--wn)}.li{color:var(--ac)}.lk{color:var(--ok)}
+
+/* Top 5 panel at bottom of Page 1 */
+.top5-panel{height:220px;border-top:1px solid var(--bd);flex-shrink:0;display:flex;flex-direction:column}
+.top5-body{flex:1;overflow-y:auto}
+
+/* ── PAGE 2: TRIAGE QUEUE ── */
+#pg-triage{flex-direction:row}
+.triage-main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.triage-body{flex:1;overflow-y:auto}
+
+/* ── PAGE 3: DECEPTION ── */
+#pg-deception{flex-direction:column;overflow-y:auto;padding:16px}
+
+/* ── PAGE 4: ML DISTRIBUTION ── */
+#pg-mlgraph{flex-direction:column;overflow-y:auto}
+.deception-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.deception-grid{grid-template-columns:1fr}}
+.card{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:16px 18px;margin-bottom:0}
+.card-title{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.card-title.warn{color:var(--wn)}
+.config-block{background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:10px;font-family:monospace;font-size:11px;color:var(--ok);white-space:pre-wrap;word-break:break-all;max-height:180px;overflow-y:auto;margin-bottom:10px}
+
+/* ── SHARED TABLE ── */
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{text-align:left;padding:6px 10px;color:var(--mu);font-weight:600;background:var(--s);border-bottom:1px solid var(--bd);white-space:nowrap;position:sticky;top:0;z-index:5}
+td{padding:6px 10px;border-bottom:1px solid #0f141a;vertical-align:middle}
+tr.selected td{background:#0d1a2e}
+tr:hover td{background:var(--s3);cursor:pointer}
+.mono{font-family:monospace;font-size:11px;color:var(--dr)}
+.badge{display:inline-block;padding:1px 7px;border-radius:8px;font-size:10px;font-weight:700}
+.bd-dr{background:#2d1213;color:var(--dr)}
+.bd-wn{background:#221a08;color:var(--wn)}
+.bd-ok{background:#0d2214;color:var(--ok)}
+.bd-mu{background:var(--s);color:var(--mu);border:1px solid var(--bd)}
+.bd-ac{background:#0c1f3a;color:var(--ac);border:1px solid #1a3866}
+
+/* ── ACTION BUTTONS ── */
+.act-btns{display:flex;gap:4px;flex-wrap:wrap}
+.abt{padding:2px 7px;border-radius:5px;border:none;cursor:pointer;font-size:10px;font-weight:700;transition:opacity .15s;white-space:nowrap}
+.abt:hover{opacity:.82}
+.abt-inv{background:#0c1f3a;color:var(--ac);border:1px solid #1a3866}
+.abt-alt{background:#2d1213;color:var(--dr)}
+.abt-unban{background:#0d2214;color:var(--ok)}
+.abt-rep{background:#221a08;color:var(--wn);border:1px solid #3a2e0a}
+
+/* ── DETAIL SIDE PANEL ── */
+.detail-panel{width:300px;border-left:1px solid var(--bd);background:var(--s);overflow-y:auto;flex-shrink:0;display:flex;flex-direction:column}
+.detail-hdr{padding:8px 12px;border-bottom:1px solid var(--bd);font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.07em;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.detail-close{background:none;border:none;color:var(--mu);cursor:pointer;font-size:14px;line-height:1}
+.detail-close:hover{color:var(--tx)}
+#detail-content{padding:12px;font-size:11px;color:var(--mu);flex:1}
+.detail-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bd)}
+.detail-row:last-child{border-bottom:none}
+.detail-key{color:var(--mu)}
+.detail-val{color:var(--tx);font-family:monospace;text-align:right;word-break:break-all;max-width:160px}
+.detail-val.red{color:var(--dr)}.detail-val.ok{color:var(--ok)}
+.detail-section{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted2);padding:10px 0 4px}
+
+/* ── PORT STATUS ── */
+.port-status-ok{color:var(--ok);font-weight:700}
+.port-status-wn{color:var(--wn);font-weight:700}
+
+/* ── DECEPTION BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:600;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btn-wn{background:var(--wn);color:#000}
+.btn-dr{background:var(--dr);color:#fff}
+.btn-g{background:var(--s3);border:1px solid var(--bd);color:var(--tx)}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+
+/* ── FLASH ── */
+.flash{pointer-events:none;position:fixed;inset:0;background:rgba(248,81,73,.12);opacity:0;transition:opacity .12s;z-index:9999}
+</style>
+</head>
+<body>
+<div class="flash" id="fl"></div>
+
+<!-- ── HEADER ── -->
+<header>
+  <span class="logo">&#9650; A.C.E.S.</span>
+  <span class="sub">Security Operations Center &mdash; RESTRICTED</span>
+  <span class="badge-mode"><span class="dot dot-wn"></span> Zero Trust Active</span>
+  <span class="badge-mode" id="abuseipdb-mode"><span class="dot dot-wn"></span> AbuseIPDB: checking...</span>
+  <span id="ws-status" style="margin-left:4px">&#9679; Offline</span>
+  <div class="hdr-right">
+    <span class="user-badge" id="user-badge">--</span>
+    <button class="btn-hdr" onclick="doLogout()">&#9099; Logout</button>
+  </div>
+</header>
+
+<!-- ── PAGE NAV ── -->
+<nav class="page-nav">
+  <button class="tab-pg active" id="tab-logs"      onclick="showPage('logs')">
+    &#128220; Active Logs &amp; Details
+  </button>
+  <button class="tab-pg"        id="tab-triage"    onclick="showPage('triage')">
+    &#128683; Live Triage Queue <span class="tab-badge" id="triage-badge">0</span>
+  </button>
+  <button class="tab-pg"        id="tab-deception" onclick="showPage('deception')">
+    &#128274; Deception &amp; Honeytokens
+  </button>
+  <button class="tab-pg"        id="tab-mlgraph"   onclick="showPage('mlgraph')">
+    &#128202; Anomaly Score Distribution
+  </button>
+  <button class="tab-pg"        id="tab-baseline"  onclick="showPage('baseline')">
+    &#128200; Baseline Timeline
+  </button>
+</nav>
+
+<div class="body-wrap">
+
+  <!-- ── SIDEBAR METRICS ── -->
+  <aside>
+    <div class="metric"><div class="metric-val"     id="m-sess">0</div><div class="metric-lbl">Active Sessions</div></div>
+    <div class="metric"><div class="metric-val red" id="m-ban">0</div><div class="metric-lbl">Banned IPs</div></div>
+    <div class="metric"><div class="metric-val wn"  id="m-evict">0</div><div class="metric-lbl">Evicted Sessions</div></div>
+    <div class="metric"><div class="metric-val"     id="m-alert">0</div><div class="metric-lbl">Total Alerts</div></div>
+    <div class="metric"><div class="metric-val"     id="m-port">0</div><div class="metric-lbl">Port Trap Hits</div></div>
+    <div class="metric"><div class="metric-val wn"  id="m-honey">0</div><div class="metric-lbl">Honeytoken Trips</div></div>
+    <button class="sidebar-btn" onclick="loadStatus()" style="margin-top:auto">&#8635; Refresh</button>
+  </aside>
+
+  <!-- ══ PAGE 1: ACTIVE LOGS & DETAILS ══ -->
+  <div class="page-wrap show" id="pg-logs">
+
+    <div class="panel-hdr">
+      <span>&#9654; Live Event Stream</span>
+      <button class="panel-btn" onclick="clearStream()">Clear</button>
+    </div>
+    <div id="stream" style="flex:1;min-height:0"><span style="color:var(--muted2)">-- awaiting events --</span></div>
+
+    <!-- Top 5 Malicious Users Panel -->
+    <div class="top5-panel">
+      <div class="panel-hdr" style="flex-shrink:0">
+        <span>&#128293; Top 5 Most Volatile IPs &nbsp;<small style="font-size:9px;color:var(--mu)">(anomaly score &gt; 0.50, live from DB)</small></span>
+        <button class="panel-btn" onclick="loadTopThreats()">&#8635; Reload</button>
+      </div>
+      <div class="top5-body">
+        <table>
+          <thead>
+            <tr><th>IP Address</th><th>Username</th><th>Role</th><th>Max Score</th><th>Events</th><th>Last Seen</th><th>Action</th></tr>
+          </thead>
+          <tbody id="top5-tbody">
+            <tr><td colspan="7" style="color:var(--mu);text-align:center;padding:10px">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 2: LIVE TRIAGE QUEUE ══ -->
+  <div class="page-wrap" id="pg-triage">
+
+    <div class="triage-main">
+      <div class="panel-hdr">
+        <span>&#128683; Live Triage Queue</span>
+        <button class="panel-btn" onclick="loadEvents()">&#8635; Reload</button>
+      </div>
+      <div class="triage-body">
+        <table>
+          <thead>
+            <tr>
+              <th>IP Address</th><th>Username</th><th>Trigger</th><th>Score</th><th>Type</th><th>Time</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="triage-tbody">
+            <tr><td colspan="7" style="color:var(--mu);text-align:center;padding:14px">No events yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Detail side panel -->
+    <div class="detail-panel" id="detail-panel" style="display:none">
+      <div class="detail-hdr">
+        <span>&#128270; Event Detail</span>
+        <button class="detail-close" onclick="closeDetail()">&#10005;</button>
+      </div>
+      <div id="detail-content">
+        <div style="color:var(--muted2);font-size:11px;padding:12px">Select a row to inspect.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 3: DECEPTION & HONEYTOKENS ══ -->
+  <div class="page-wrap" id="pg-deception">
+
+    <div class="panel-hdr" style="flex-shrink:0">
+      <span>&#128274; Deception Infrastructure &mdash; SOC Analyst Eyes Only</span>
+      <button class="panel-btn" onclick="loadDeceptionConfig()">&#8635; Reload</button>
+    </div>
+
+    <div style="flex:1;overflow-y:auto;padding:16px">
+      <div class="deception-grid">
+
+        <!-- Honeytoken Config -->
+        <div class="card">
+          <div class="card-title warn">&#9881; System Configuration</div>
+          <p style="font-size:12px;color:var(--mu);margin-bottom:10px">Live honeytoken configuration. This view is restricted to SOC engineers and is never shown to the admin role.</p>
+          <div class="config-block" id="config-block">Loading configuration...</div>
+          <div class="btn-row">
+            <button class="btn btn-wn" onclick="loadDeceptionConfig();loadHoneytokenHistory()">&#8635; Reload Config</button>
+            <button class="btn btn-dr" onclick="triggerHoneytoken()">&#9888; Trigger Honeytoken Alert</button>
+          </div>
+        </div>
+
+        <!-- Active Honeypot Ports -->
+        <div class="card">
+          <div class="card-title warn">&#128275; Active Honeypot Ports</div>
+          <p style="font-size:12px;color:var(--mu);margin-bottom:10px">Real-time deception port status. Only visible to SOC analysts, never to admin_user.</p>
+          <table>
+            <thead>
+              <tr><th>Port</th><th>Protocol</th><th>Decoy Service</th><th>Status</th></tr>
+            </thead>
+            <tbody id="ports-tbody">
+              <tr><td colspan="4" style="color:var(--mu);text-align:center;padding:10px">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- Honeyport Management — SOC Engineer only -->
+      <div class="card" style="margin-top:16px">
+        <div class="card-title warn">&#9881; Honeyport Configuration</div>
+        <p style="font-size:12px;color:var(--mu);margin-bottom:12px">
+          Change which TCP ports the <strong style="color:var(--tx)">PortTrap</strong> daemon listens on.
+          Enter a comma-separated list of port numbers and click Apply.
+          The daemon will stop its current listeners and re-bind immediately —
+          no restart required.<br/>
+          <span style="color:var(--wn)">&#9888;</span> Ports below 1024 require Administrator / root privileges.
+          Port <code>445</code> is reserved by Windows (SMB service) and may fail to bind.
+        </p>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+          <label style="font-size:11px;color:var(--mu);white-space:nowrap">Active ports:</label>
+          <input id="hp-port-input" type="text" value="3389,22,445"
+            placeholder="e.g. 3389,22,8080"
+            style="flex:1;min-width:180px;background:var(--bg);border:1px solid var(--bd);
+                   border-radius:6px;padding:5px 10px;color:var(--tx);font-family:monospace;
+                   font-size:12px;outline:none"/>
+          <button class="btn btn-dr" onclick="applyHoneyports()">&#9654; Apply</button>
+          <button class="btn btn-g"  onclick="loadDeceptionConfig()">&#8635; Refresh Status</button>
+        </div>
+        <div id="hp-result" style="font-size:11px;color:var(--mu)"></div>
+        <p style="font-size:10px;color:var(--muted2);margin-top:8px">
+          This control writes the new port list to the live PortTrap instance only.
+          To persist across restarts, update <code>ACES_HONEYPORT_LIST</code> in <code>.env</code>.
+        </p>
+      </div>
+
+      <!-- Honeytoken Trip History -->
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">&#128481; Honeytoken Trip History</div>
+        <table>
+          <thead>
+            <tr><th>IP Address</th><th>Trigger</th><th>Token Path</th><th>Action</th><th>Username</th><th>Timestamp</th></tr>
+          </thead>
+          <tbody id="honey-history-tbody">
+            <tr><td colspan="6" style="color:var(--mu);text-align:center;padding:10px">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Monitor-Only Mode Control -->
+      <div class="card" style="margin-top:16px">
+        <div class="card-title warn">&#9881; SOAR Response Mode</div>
+        <p style="font-size:12px;color:var(--mu);margin-bottom:12px">
+          In <strong style="color:var(--wn)">Monitor-Only</strong> mode, threats are logged and streamed to this dashboard
+          <em>without</em> blocking the attacker's HTTP session. Use during live Kali VM demos
+          to observe full reconnaissance (Gobuster, Nmap, honeytoken) in real time.<br/>
+          In <strong style="color:var(--dr)">Enforce</strong> mode, each trigger results in an immediate ban.
+        </p>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <span id="monitor-mode-badge" class="badge bd-mu">Checking...</span>
+          <button class="btn btn-wn" onclick="setMonitorMode(true)">&#128065; Enable Monitor-Only</button>
+          <button class="btn btn-dr" onclick="setMonitorMode(false)">&#9940; Enable Enforce Mode</button>
+          <button class="btn btn-g"  onclick="loadDeceptionConfig();loadHoneytokenHistory()">&#8635; Refresh</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 4: ANOMALY SCORE DISTRIBUTION ══ -->
+  <div class="page-wrap" id="pg-mlgraph">
+    <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px">
+
+      <!-- Header card -->
+      <div class="card" style="margin-bottom:0">
+        <div class="card-title">&#128202; IsolationForest Anomaly Score Separation</div>
+        <p style="font-size:12px;color:var(--mu);margin-bottom:12px">
+          Live score distribution generated by the production
+          <strong style="color:var(--tx)">BehaviorScorer</strong> (IsolationForest,
+          n=100 estimators, contamination=5%).  200 baseline <em>normal-traffic</em>
+          samples vs 200 <em>attack-traffic</em> samples modelling automated scanner
+          behaviour (dirb / nmap / Gobuster).  The dashed lines mark the SOC alert
+          threshold and the SOAR auto-containment threshold.
+        </p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button class="btn btn-g" id="btn-load-graph" onclick="loadMLGraph()">
+            &#9654; Run Simulation &amp; Render Graph
+          </button>
+          <span id="graph-status" style="font-size:11px;color:var(--mu)">Click to generate.</span>
+        </div>
+      </div>
+
+      <!-- Chart canvas -->
+      <div class="card" style="margin-bottom:0;position:relative;min-height:340px">
+        <div class="card-title">Score Density Distribution</div>
+        <div style="position:relative;height:300px">
+          <canvas id="mlChart"></canvas>
+          <div id="chart-placeholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mu);font-size:12px">
+            No data yet &mdash; run the simulation above.
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" id="stats-grid" style="display:none">
+
+        <!-- Normal traffic stats -->
+        <div class="card" style="margin-bottom:0">
+          <div class="card-title" style="color:var(--ok)">&#9679; Normal Traffic</div>
+          <table style="width:100%">
+            <tbody id="normal-stats-tbody">
+              <tr><td colspan="2" style="color:var(--mu);padding:8px">--</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Attack traffic stats -->
+        <div class="card" style="margin-bottom:0">
+          <div class="card-title" style="color:var(--dr)">&#9679; Attack Traffic</div>
+          <table style="width:100%">
+            <tbody id="attack-stats-tbody">
+              <tr><td colspan="2" style="color:var(--mu);padding:8px">--</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Threshold legend -->
+      <div class="card" style="margin-bottom:0" id="threshold-legend" style="display:none">
+        <div class="card-title">&#9135; Threshold Legend</div>
+        <div style="display:flex;gap:24px;flex-wrap:wrap;font-size:12px">
+          <span><span style="color:var(--wn);font-weight:700">&#9135;&#9135; 0.50</span> &nbsp;SOC Alert Threshold &mdash; analyst review triggered above this score</span>
+          <span><span style="color:var(--dr);font-weight:700">&#9135;&#9135; 0.85</span> &nbsp;SOAR Auto-Containment &mdash; automatic ban + session revocation above this score</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ PAGE 5: BASELINE TIMELINE ══ -->
+  <div class="page-wrap" id="pg-baseline">
+    <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px">
+
+      <!-- Header card -->
+      <div class="card" style="margin-bottom:0">
+        <div class="card-title">&#128200; Anomaly Score Baseline Timeline</div>
+        <p style="font-size:12px;color:var(--mu);margin-bottom:12px">
+          Live time-series of incoming <strong style="color:var(--tx)">BehaviorScorer</strong>
+          anomaly scores vs the fixed <strong style="color:var(--wn)">baseline threshold (0.50)</strong>.
+          Data points <strong style="color:var(--dr)">below the baseline region</strong>
+          (score &ge; threshold) are highlighted in red &mdash; indicating anomalous traffic
+          that has crossed into the SOC alert zone.
+          The chart auto-updates every 5 seconds using live telemetry from the production scorer.
+        </p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button class="btn btn-g" id="btn-baseline-start" onclick="baselineToggle()">
+            &#9654; Start Live Feed
+          </button>
+          <button class="btn btn-g" id="btn-baseline-clear" onclick="baselineClear()" style="display:none">
+            &#128465; Clear History
+          </button>
+          <span id="baseline-status" style="font-size:11px;color:var(--mu)">Press Start to begin streaming.</span>
+          <span id="baseline-count"  style="font-size:11px;color:var(--mu);margin-left:auto"></span>
+        </div>
+      </div>
+
+      <!-- Chart canvas -->
+      <div class="card" style="margin-bottom:0;position:relative;min-height:380px">
+        <div class="card-title" style="margin-bottom:6px">
+          <span>Live Score Stream</span>
+          <span style="margin-left:auto;display:flex;gap:16px;font-size:11px;font-weight:400">
+            <span><span style="color:var(--ok)">&#9679;</span> Normal (score &lt; 0.50)</span>
+            <span><span style="color:var(--dr)">&#9679;</span> Anomaly (score &ge; 0.50)</span>
+            <span style="color:var(--wn)">&#9135;&#9135; Baseline Threshold (0.50)</span>
+          </span>
+        </div>
+        <div style="position:relative;height:320px">
+          <canvas id="baselineChart"></canvas>
+          <div id="baseline-placeholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mu);font-size:12px">
+            No data yet &mdash; press Start Live Feed above.
+          </div>
+        </div>
+      </div>
+
+      <!-- Live telemetry controls -->
+      <div class="card" style="margin-bottom:0">
+        <div class="card-title">&#128295; Telemetry Probe Controls</div>
+        <p style="font-size:12px;color:var(--mu);margin-bottom:12px">
+          Adjust the synthetic telemetry probe parameters sent to
+          <code style="color:var(--ac)">POST /api/telemetry/score</code>.
+          High request rates and very short click intervals produce attack-like
+          scores; low rates and normal intervals produce benign scores.
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+          <div>
+            <label style="font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">
+              Request Rate (rps)
+            </label>
+            <input id="bl-req-rate" type="range" min="0.5" max="500" step="0.5" value="2"
+              oninput="document.getElementById('bl-req-rate-val').textContent=this.value"
+              style="width:100%;accent-color:var(--ac)"/>
+            <span id="bl-req-rate-val" style="font-size:11px;color:var(--tx);font-family:monospace">2</span> rps
+          </div>
+          <div>
+            <label style="font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">
+              Click Interval (ms) — mean
+            </label>
+            <input id="bl-click-ms" type="range" min="1" max="800" step="1" value="200"
+              oninput="document.getElementById('bl-click-ms-val').textContent=this.value"
+              style="width:100%;accent-color:var(--ac)"/>
+            <span id="bl-click-ms-val" style="font-size:11px;color:var(--tx);font-family:monospace">200</span> ms
+          </div>
+          <div>
+            <label style="font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">
+              Session Duration (ms)
+            </label>
+            <input id="bl-session-ms" type="range" min="100" max="60000" step="100" value="5000"
+              oninput="document.getElementById('bl-session-ms-val').textContent=this.value"
+              style="width:100%;accent-color:var(--ac)"/>
+            <span id="bl-session-ms-val" style="font-size:11px;color:var(--tx);font-family:monospace">5000</span> ms
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-g" onclick="baselinePreset('normal')">&#9997; Normal Traffic Preset</button>
+          <button class="btn btn-g" onclick="baselinePreset('attack')">&#9888; Attack Traffic Preset</button>
+        </div>
+      </div>
+
+      <!-- Live data table -->
+      <div class="card" style="margin-bottom:0">
+        <div class="card-title">&#128202; Recent Score Log</div>
+        <div style="max-height:200px;overflow-y:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Anomaly Score</th>
+                <th>Baseline Threshold</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="baseline-log-tbody">
+              <tr><td colspan="4" style="color:var(--mu);text-align:center;padding:10px">No data yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- body-wrap -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+const API    = window.location.origin;
+const WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
+
+let totAlerts = 0, selectedRow = null;
+
+// ── BADGE HELPERS ─────────────────────────────────────────────────────────────
+function setBadge(n) {
+  const el = document.getElementById('triage-badge');
+  const val = Math.max(0, parseInt(n) || 0);
+  el.textContent = val;
+  // Hide badge when zero so the tab looks clean
+  el.style.display = val > 0 ? '' : 'none';
+}
+
+// Load the authoritative unread count from the API and apply it to the badge.
+async function refreshBadge() {
+  try {
+    const r = await fetch(API + '/api/events/unread-count', { credentials: 'include' });
+    if (r.ok) {
+      const d = await r.json();
+      setBadge(d.unread_count ?? 0);
+    }
+  } catch { /* badge stays at last known value */ }
+}
+// Poll unread count every 30 s as a safety net
+setInterval(refreshBadge, 30000);
+
+// ── SESSION GUARD ────────────────────────────────────────────────────────────
+const role  = sessionStorage.getItem('aces_role')  || '';
+const uname = sessionStorage.getItem('aces_user')  || '';
+const token = sessionStorage.getItem('aces_token') || '';
+if (!token || (role !== 'engineer' && role !== 'Engineer')) {
+  window.location.replace('/app/login');
+}
+document.getElementById('user-badge').textContent = uname + ' [' + role + ']';
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s === null || s === undefined ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function fmtTs(ts) {
+  if (!ts) return '--';
+  try { return new Date(ts * 1000).toLocaleString(); } catch { return String(ts); }
+}
+function flash() {
+  const o = document.getElementById('fl');
+  o.style.opacity = '1';
+  setTimeout(() => { o.style.opacity = '0'; }, 320);
+}
+
+// ── PAGE NAVIGATION ──────────────────────────────────────────────────────────
+function showPage(name) {
+  ['logs','triage','deception','mlgraph','baseline'].forEach(p => {
+    document.getElementById('pg-' + p).classList.toggle('show', p === name);
+    document.getElementById('tab-' + p).classList.toggle('active', p === name);
+  });
+  if (name === 'triage')    { loadEvents();         }
+  if (name === 'deception') { loadDeceptionConfig(); loadHoneytokenHistory(); }
+  if (name === 'mlgraph')   { /* user clicks Run button */ }
+  if (name === 'baseline')  { /* user clicks Start button */ }
+}
+
+// ── STREAM LOG (Page 1) ──────────────────────────────────────────────────────
+function streamLog(msg, level) {
+  const t = document.getElementById('stream');
+  const ph = t.querySelector('span');
+  if (ph && ph.style.color && ph.style.color.includes('46')) ph.remove();
+  const now = new Date().toISOString().split('T')[1].split('.')[0];
+  const lvMap = { info:'INFO', warn:'WARN', critical:'CRIT', ok:'OK  ' };
+  const clMap = { info:'li',   warn:'lw',   critical:'lc',   ok:'lk'  };
+  const d = document.createElement('div');
+  d.className = 'll';
+  d.innerHTML = '<span class="ts">' + now + '</span>'
+    + '<span class="lv ' + (clMap[level]||'li') + '">[' + (lvMap[level]||'INFO') + ']</span> '
+    + esc(msg);
+  t.appendChild(d);
+  t.scrollTop = t.scrollHeight;
+  if (t.children.length > 400) t.removeChild(t.firstChild);
+}
+function clearStream() {
+  document.getElementById('stream').innerHTML = '<span style="color:var(--muted2)">-- cleared --</span>';
+}
+
+// ── WEBSOCKET ────────────────────────────────────────────────────────────────
+let ws = null, rTimer = null;
+function wsConnect() {
+  ws = new WebSocket(WS_URL);
+  ws.onopen  = () => {
+    document.getElementById('ws-status').innerHTML = '&#9679; Live';
+    document.getElementById('ws-status').className = 'live';
+    streamLog('SOC WebSocket stream connected.', 'ok');
+    clearTimeout(rTimer);
+  };
+  ws.onclose = () => {
+    document.getElementById('ws-status').innerHTML = '&#9679; Offline';
+    document.getElementById('ws-status').className = '';
+    streamLog('Stream disconnected -- reconnecting in 3s', 'warn');
+    rTimer = setTimeout(wsConnect, 3000);
+  };
+  ws.onerror = () => ws.close();
+  ws.onmessage = e => {
+    try { handleWsEvent(JSON.parse(e.data)); }
+    catch { streamLog('Parse error: ' + e.data, 'warn'); }
+  };
+}
+wsConnect();
+
+function handleWsEvent(d) {
+  totAlerts++;
+  document.getElementById('m-alert').textContent = totAlerts;
+  flash();
+  const t  = d.alert_type || '?';
+  const ip = d.source_ip  || '?';
+  const sc = d.anomaly_score != null ? d.anomaly_score.toFixed(4) : '--';
+  let msg = '', level = 'warn';
+
+  if (t === 'AI_ANOMALY') {
+    level = sc >= 0.85 ? 'critical' : 'warn';
+    msg = 'AI_ANOMALY ip=' + ip + ' score=' + sc
+      + (d.revocation_delta_ms != null ? ' delta=' + d.revocation_delta_ms.toFixed(2) + 'ms' : '');
+  } else if (t === 'HONEYTOKEN_ACCESS') {
+    level = 'critical';
+    msg = 'HONEYTOKEN ip=' + ip + ' file=' + (d.affected_path || 'db_config.json');
+    document.getElementById('m-honey').textContent =
+      parseInt(document.getElementById('m-honey').textContent || '0') + 1;
+  } else if (t === 'PORT_TRAP') {
+    msg = 'PORT_TRAP ip=' + ip + ' port=' + (d.port || 3389);
+    document.getElementById('m-port').textContent =
+      parseInt(document.getElementById('m-port').textContent || '0') + 1;
+  } else {
+    msg = JSON.stringify(d).slice(0, 160);
+  }
+
+  streamLog(msg, level);
+
+  // Refresh dependent panels
+  loadEvents();
+  loadTopThreats();
+  // Update triage badge using server-supplied unread_count if available,
+  // otherwise fall back to the current badge value + 1 (will be corrected
+  // by the next loadEvents() poll).
+  if (d.unread_count != null) {
+    setBadge(d.unread_count);
+  } else {
+    const cur = parseInt(document.getElementById('triage-badge').textContent || '0');
+    setBadge(cur + 1);
+  }
+}
+
+// ── METRICS POLL ─────────────────────────────────────────────────────────────
+async function loadStatus() {
+  try {
+    const r = await fetch(API + '/api/metrics', { credentials: 'include' });
+    if (!r.ok) return;
+    const d = await r.json();
+    document.getElementById('m-sess').textContent  = d.active_sessions  ?? 0;
+    document.getElementById('m-ban').textContent   = d.banned_ips        ?? 0;
+    document.getElementById('m-evict').textContent = d.evicted_sessions  ?? 0;
+    document.getElementById('m-port').textContent  = d.port_trap_hits    ?? 0;
+    document.getElementById('m-honey').textContent = d.honeytoken_trips  ?? 0;
+    const totalDb = d.abuse_reports ?? 0;
+    const totalWs = d.ws_alert_count ?? totAlerts;
+    document.getElementById('m-alert').textContent = Math.max(totalDb, totalWs);
+    streamLog('Metrics: sessions=' + (d.active_sessions??0)
+      + ' banned=' + (d.banned_ips??0)
+      + ' honey=' + (d.honeytoken_trips??0), 'ok');
+  } catch { streamLog('Metrics fetch failed.', 'warn'); }
+}
+setInterval(loadStatus, 10000);
+loadStatus();
+
+// ── TOP 5 THREATS (Page 1 bottom panel) ──────────────────────────────────────
+async function loadTopThreats() {
+  const tbody = document.getElementById('top5-tbody');
+  try {
+    const r = await fetch(API + '/api/soc/top-threats', { credentials: 'include' });
+    if (r.status === 403) {
+      tbody.innerHTML = '<tr><td colspan="7" style="color:var(--dr);text-align:center;padding:10px">Access denied.</td></tr>';
+      return;
+    }
+    if (!r.ok) return;
+    const rows = await r.json();
+    if (!rows || rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="color:var(--mu);text-align:center;padding:10px">No anomalies above threshold yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    rows.forEach(row => {
+      const tr = document.createElement('tr');
+      const scCls = row.max_score >= 0.85 ? 'bd-dr' : 'bd-wn';
+      tr.innerHTML =
+        '<td class="mono">' + esc(row.ip) + '</td>' +
+        '<td>' + esc(row.username) + '</td>' +
+        '<td><span class="badge bd-mu">' + esc(row.role) + '</span></td>' +
+        '<td><span class="badge ' + scCls + '">' + row.max_score.toFixed(4) + '</span></td>' +
+        '<td style="color:var(--mu)">' + row.event_count + '</td>' +
+        '<td style="color:var(--mu);white-space:nowrap">' + esc(fmtTs(row.last_seen)) + '</td>' +
+        '<td><div class="act-btns">' +
+          '<button class="abt abt-alt"   onclick="actAlertIp(\'' + esc(row.ip) + '\')">Ban</button>' +
+          '<button class="abt abt-inv"   onclick="actInvestigateIp(\'' + esc(row.ip) + '\')">Investigate</button>' +
+        '</div></td>';
+      tbody.appendChild(tr);
+    });
+  } catch { streamLog('Top threats fetch failed.', 'warn'); }
+}
+setInterval(loadTopThreats, 15000);
+loadTopThreats();
+
+// ── TRIAGE QUEUE (Page 2) ─────────────────────────────────────────────────────
+async function loadEvents() {
+  try {
+    const r = await fetch(API + '/api/events', { credentials: 'include' });
+    if (r.status === 403) { streamLog('403: SOC access required for /api/events', 'warn'); return; }
+    if (!r.ok) return;
+    const rows = await r.json();
+    renderTriage(rows);
+    // Refresh the badge with the authoritative unread count from the server
+    await refreshBadge();
+  } catch { streamLog('Event log fetch failed.', 'warn'); }
+}
+setInterval(loadEvents, 10000);
+loadEvents();
+
+function renderTriage(rows) {
+  const tbody = document.getElementById('triage-tbody');
+  if (!rows || rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="color:var(--mu);text-align:center;padding:14px">No events recorded yet.</td></tr>';
+    setBadge(0);
+    return;
+  }
+  tbody.innerHTML = '';
+  rows.slice(0, 120).forEach((ev, idx) => {
+    const tr = document.createElement('tr');
+    tr.dataset.idx = idx;
+    tr.dataset.ev  = JSON.stringify(ev);
+    tr.dataset.key = ev.event_key || '';
+    // Visually distinguish unread (new) rows with a left border accent
+    if (!ev.viewed) {
+      tr.style.borderLeft = '3px solid var(--ac)';
+    }
+    const sc    = ev.anomaly_score != null ? parseFloat(ev.anomaly_score).toFixed(3) : '--';
+    const scBadge = ev.anomaly_score >= 0.85 ? 'bd-dr' : (ev.anomaly_score >= 0.5 ? 'bd-wn' : 'bd-mu');
+    const badge = ev.event_type === 'ban' ? 'bd-dr' : (ev.event_type === 'honeytoken' ? 'bd-dr' : 'bd-wn');
+    const label = ev.event_type === 'ban' ? 'BAN' : (ev.event_type === 'honeytoken' ? 'HONEYTOKEN' : 'REPORT');
+    tr.innerHTML =
+      '<td class="mono">' + esc(ev.ip) + '</td>' +
+      '<td style="color:var(--mu)">' + esc(ev.username || 'unknown') + '</td>' +
+      '<td>' + esc(ev.trigger || '--') + '</td>' +
+      '<td><span class="badge ' + scBadge + '">' + sc + '</span></td>' +
+      '<td><span class="badge ' + badge + '">' + label + '</span></td>' +
+      '<td style="color:var(--mu);white-space:nowrap">' + esc(fmtTs(ev.event_ts)) + '</td>' +
+      '<td><div class="act-btns">' +
+        '<button class="abt abt-inv"   onclick="actInvestigate(this,event)">Investigate</button>' +
+        '<button class="abt abt-alt"   onclick="actAlert(this,event)">Alert</button>' +
+        '<button class="abt abt-unban" onclick="actUnban(this,event)">Remove Ban</button>' +
+        '<button class="abt abt-rep"   onclick="actReport(this,event)">AbuseIPDB</button>' +
+      '</div></td>';
+    tr.addEventListener('click', e => {
+      if (e.target.tagName === 'BUTTON') return;
+      selectRow(tr, ev);
+      // Mark as read: clear the unread accent and call the API
+      if (!ev.viewed && ev.event_key) {
+        ev.viewed = true;
+        tr.style.borderLeft = '';
+        markTriageRead(ev.event_key);
+      }
+    });
+    tbody.appendChild(tr);
+  });
+  // Badge is refreshed via refreshBadge() called in loadEvents()
+}
+
+// Mark a triage event as read/viewed and decrement the badge
+async function markTriageRead(eventKey) {
+  if (!eventKey) return;
+  try {
+    const r = await fetch(API + '/api/events/mark-read', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event_key: eventKey }),
+    });
+    if (r.ok) {
+      const d = await r.json();
+      if (d.unread_count != null) setBadge(d.unread_count);
+    }
+  } catch { /* badge will self-correct on next poll */ }
+}
+
+function selectRow(tr, ev) {
+  document.querySelectorAll('#triage-tbody tr').forEach(r => r.classList.remove('selected'));
+  tr.classList.add('selected');
+  selectedRow = ev;
+  showDetail(ev);
+}
+
+function showDetail(ev) {
+  const panel = document.getElementById('detail-panel');
+  panel.style.display = 'flex';
+  const sc = ev.anomaly_score != null ? parseFloat(ev.anomaly_score).toFixed(6) : 'N/A';
+  const scCls = (ev.anomaly_score || 0) >= 0.85 ? 'red' : 'ok';
+  document.getElementById('detail-content').innerHTML =
+    '<div class="detail-section">Identification</div>' +
+    drow('IP Address',   '<span class="detail-val red">' + esc(ev.ip) + '</span>') +
+    drow('Username',     '<span class="detail-val">' + esc(ev.username || 'unknown') + '</span>') +
+    drow('Role',         '<span class="detail-val">' + esc(ev.role     || 'unknown') + '</span>') +
+    '<div class="detail-section">Event Metadata</div>' +
+    drow('Trigger',      esc(ev.trigger    || '--')) +
+    drow('Event Type',   esc(ev.event_type || '--')) +
+    drow('Timestamp',    esc(fmtTs(ev.event_ts))) +
+    '<div class="detail-section">Zero Trust Scoring</div>' +
+    drow('Anomaly Score','<span class="detail-val ' + scCls + '">' + sc + '</span>') +
+    drow('Banned',       ev.banned ? '<span class="detail-val red">YES</span>' : '<span class="detail-val ok">NO</span>') +
+    '<div class="detail-section">Quick Actions</div>' +
+    '<div style="display:flex;flex-direction:column;gap:5px;margin-top:6px">' +
+      '<button class="abt abt-inv"   style="width:100%;padding:6px" onclick="actInvestigateIp(\'' + esc(ev.ip) + '\')">&#128270; Investigate IP</button>' +
+      '<button class="abt abt-alt"   style="width:100%;padding:6px" onclick="actAlertIp(\''      + esc(ev.ip) + '\')">&#9888; Manual Ban</button>' +
+      '<button class="abt abt-unban" style="width:100%;padding:6px" onclick="actUnbanIp(\''      + esc(ev.ip) + '\')">&#9989; Remove Ban</button>' +
+      '<button class="abt abt-rep"   style="width:100%;padding:6px" onclick="actReportIp(\''     + esc(ev.ip) + '\')">&#128203; Report to AbuseIPDB</button>' +
+    '</div>';
+}
+function drow(k, v) {
+  return '<div class="detail-row"><span class="detail-key">' + k + '</span><span class="detail-val">' + v + '</span></div>';
+}
+function closeDetail() {
+  document.getElementById('detail-panel').style.display = 'none';
+  document.querySelectorAll('#triage-tbody tr').forEach(r => r.classList.remove('selected'));
+}
+
+// ── DECEPTION CONFIG (Page 3) ─────────────────────────────────────────────────
+async function loadDeceptionConfig() {
+  const block = document.getElementById('config-block');
+  block.textContent = 'Loading...';
+  try {
+    const r = await fetch(API + '/api/soc/deception-config', { credentials: 'include' });
+    if (r.status === 403) { block.textContent = '[403] SOC engineer access required.'; return; }
+    if (!r.ok) { block.textContent = 'Fetch failed: ' + r.status; return; }
+    const d = await r.json();
+    // Show honeytoken content separately from ports
+    const content = d.honeytoken_content
+      ? JSON.stringify(d.honeytoken_content, null, 2)
+      : (d.honeytoken_note || 'No honeytoken content available.');
+    block.textContent = '// File: ' + (d.honeytoken_file || 'unknown') + '\n\n' + content;
+    // Render ports table
+    renderPorts(d.honeypot_ports || []);
+    // Pre-populate honeyport management input with current port numbers
+    const hpInput = document.getElementById('hp-port-input');
+    if (hpInput && d.honeypot_ports && d.honeypot_ports.length > 0) {
+      hpInput.value = d.honeypot_ports.map(p => p.port).join(',');
+    }
+    // Update monitor-mode badge from API response
+    const badge = document.getElementById('monitor-mode-badge');
+    if (badge) {
+      const mo = d.monitor_only === true;
+      badge.textContent = mo ? '🟡 MONITOR-ONLY (alerts, no bans)' : '🔴 ENFORCE (auto-ban on trigger)';
+      badge.className   = 'badge ' + (mo ? 'bd-wn' : 'bd-dr');
+    }
+  } catch (err) {
+    block.textContent = 'Error loading configuration: ' + err.message;
+  }
+}
+
+function renderPorts(ports) {
+  const tbody = document.getElementById('ports-tbody');
+  if (!ports || ports.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="color:var(--mu);text-align:center">No ports configured.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = '';
+  ports.forEach(p => {
+    const statusCls = p.status === 'LISTENING' ? 'port-status-ok' : 'port-status-wn';
+    tbody.innerHTML +=
+      '<tr>' +
+      '<td class="mono" style="color:var(--ac)">' + esc(p.port) + '</td>' +
+      '<td>' + esc(p.protocol) + '</td>' +
+      '<td>' + esc(p.decoy) + '</td>' +
+      '<td class="' + statusCls + '">' + esc(p.status) + '</td>' +
+      '</tr>';
+  });
+}
+
+async function loadHoneytokenHistory() {
+  const tbody = document.getElementById('honey-history-tbody');
+  try {
+    const r = await fetch(API + '/api/deception/history', { credentials: 'include' });
+    if (r.status === 403) {
+      tbody.innerHTML = '<tr><td colspan="6" style="color:var(--dr);text-align:center;padding:10px">Access denied.</td></tr>';
+      return;
+    }
+    if (!r.ok) return;
+    const rows = await r.json();
+    if (!rows || rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="color:var(--mu);text-align:center;padding:10px">No honeytoken trips recorded.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    rows.forEach(b => {
+      const actionCls = b.action === 'BANNED' ? 'bd-dr' : b.action === 'MONITOR_ONLY_ALERT' ? 'bd-wn' : 'bd-mu';
+      tbody.innerHTML +=
+        '<tr>' +
+        '<td class="mono">'                               + esc(b.ip)          + '</td>' +
+        '<td>'                                            + esc(b.trigger)     + '</td>' +
+        '<td style="color:var(--mu);font-size:10px;word-break:break-all">' + esc(b.token_path) + '</td>' +
+        '<td><span class="badge ' + actionCls + '">'      + esc(b.action)      + '</span></td>' +
+        '<td style="color:var(--mu)">'                    + esc(b.username || 'unknown') + '</td>' +
+        '<td style="color:var(--mu);white-space:nowrap">' + esc(fmtTs(b.recorded_at)) + '</td>' +
+        '</tr>';
+    });
+  } catch (e) { streamLog('Honeytoken history fetch failed: ' + e, 'warn'); }
+}
+
+async function setMonitorMode(enabled) {
+  streamLog('[Mode] Setting SOAR to ' + (enabled ? 'MONITOR-ONLY' : 'ENFORCE') + ' mode...', 'warn');
+  try {
+    const r = await fetch(API + '/api/soc/monitor-mode', {
+      method: 'POST', credentials: 'include',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ enabled }),
+    });
+    const d = await r.json();
+    if (r.ok) {
+      streamLog('[Mode] ' + (d.message || 'Mode updated.'), enabled ? 'warn' : 'critical');
+      const badge = document.getElementById('monitor-mode-badge');
+      if (badge) {
+        badge.textContent  = enabled ? '🟡 MONITOR-ONLY' : '🔴 ENFORCE';
+        badge.className    = 'badge ' + (enabled ? 'bd-wn' : 'bd-dr');
+      }
+    } else {
+      streamLog('[Mode] Failed: ' + JSON.stringify(d), 'warn');
+    }
+  } catch (e) { streamLog('[Mode] Request failed: ' + e, 'warn'); }
+}
+
+// ── HONEYPORT MANAGEMENT ──────────────────────────────────────────────────────
+async function applyHoneyports() {
+  const input   = document.getElementById('hp-port-input');
+  const result  = document.getElementById('hp-result');
+  const raw     = (input ? input.value : '').trim();
+  if (!raw) { if (result) result.textContent = 'Enter at least one port number.'; return; }
+
+  // Parse and validate client-side before sending
+  const ports = raw.split(',')
+    .map(s => parseInt(s.trim(), 10))
+    .filter(n => !isNaN(n) && n > 0 && n <= 65535);
+
+  if (ports.length === 0) {
+    if (result) { result.textContent = 'No valid ports found. Use comma-separated integers (1–65535).'; result.style.color = 'var(--dr)'; }
+    return;
+  }
+
+  if (result) { result.textContent = 'Applying...'; result.style.color = 'var(--mu)'; }
+  streamLog('[Honeyport] Reconfiguring PortTrap to ports: ' + ports.join(', ') + ' ...', 'warn');
+
+  try {
+    const r = await fetch(API + '/api/soc/honeyports', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ports }),
+    });
+    const d = await r.json();
+    if (r.ok) {
+      const listening = (d.listening_ports || []).join(', ') || '(none bound)';
+      const failed    = (d.failed_ports   || []).join(', ');
+      let msg = '✓ Bound: ' + listening;
+      if (failed) msg += '  |  ✗ Failed: ' + failed + ' (privilege / OS conflict)';
+      if (result) { result.textContent = msg; result.style.color = failed ? 'var(--wn)' : 'var(--ok)'; }
+      streamLog('[Honeyport] ' + msg, failed ? 'warn' : 'ok');
+      // Refresh the deception config panel to show updated port status
+      loadDeceptionConfig();
+    } else {
+      const msg = 'Error ' + r.status + ': ' + (d.error || JSON.stringify(d));
+      if (result) { result.textContent = msg; result.style.color = 'var(--dr)'; }
+      streamLog('[Honeyport] Failed: ' + msg, 'warn');
+    }
+  } catch (e) {
+    if (result) { result.textContent = 'Request failed: ' + e.message; result.style.color = 'var(--dr)'; }
+    streamLog('[Honeyport] Request failed: ' + e, 'warn');
+  }
+}
+
+async function triggerHoneytoken() {
+  streamLog('[Deception] Triggering honeytoken alert...', 'warn');
+  try {
+    const r = await fetch(API + '/api/honeytoken', { method: 'POST', credentials: 'include' });
+    streamLog('[Deception] Honeytoken triggered. Status: ' + r.status, r.status === 403 ? 'ok' : 'warn');
+    loadHoneytokenHistory();
+    loadStatus();
+  } catch { streamLog('[Deception] Trigger failed.', 'warn'); }
+}
+
+// ── ACTION HELPERS ────────────────────────────────────────────────────────────
+function getIpFromButton(btn) {
+  const tr = btn.closest('tr');
+  return tr && tr.dataset.ev ? JSON.parse(tr.dataset.ev).ip : null;
+}
+function actInvestigate(btn, e) { e.stopPropagation(); const ip = getIpFromButton(btn); if (ip) actInvestigateIp(ip); }
+function actAlert(btn, e)       { e.stopPropagation(); const ip = getIpFromButton(btn); if (ip) actAlertIp(ip); }
+function actUnban(btn, e)       { e.stopPropagation(); const ip = getIpFromButton(btn); if (ip) actUnbanIp(ip); }
+function actReport(btn, e)      { e.stopPropagation(); const ip = getIpFromButton(btn); if (ip) actReportIp(ip); }
+
+async function actInvestigateIp(ip) {
+  showPage('logs');
+  streamLog('[Investigate] Fetching metadata for ' + ip + ' ...', 'info');
+  try {
+    const r = await fetch(API + '/api/events', { credentials: 'include' });
+    if (!r.ok) { streamLog('[Investigate] Server returned ' + r.status, 'warn'); return; }
+    const rows = await r.json();
+    const hits = rows.filter(e => e.ip === ip);
+    streamLog('[Investigate] ' + ip + ': ' + hits.length + ' record(s) found.', 'ok');
+    hits.slice(0, 5).forEach(h => {
+      streamLog('  trigger=' + (h.trigger||'?') + ' score='
+        + (h.anomaly_score != null ? parseFloat(h.anomaly_score).toFixed(4) : '--')
+        + ' user=' + (h.username||'unknown') + ' role=' + (h.role||'unknown')
+        + ' at=' + fmtTs(h.event_ts), 'info');
+    });
+  } catch { streamLog('[Investigate] Fetch failed.', 'warn'); }
+}
+
+async function actAlertIp(ip) {
+  streamLog('[Alert] Manual containment for ' + ip + ' ...', 'warn');
+  try {
+    const r = await fetch(API + '/api/ban', {
+      method: 'POST', credentials: 'include',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ ip, reason: 'analyst_manual_ban' }),
+    });
+    const d = await r.json();
+    if (d.success) { streamLog('[Alert] ' + ip + ' banned.', 'critical'); flash(); loadEvents(); loadStatus(); }
+    else           { streamLog('[Alert] Ban failed: ' + JSON.stringify(d), 'warn'); }
+  } catch { streamLog('[Alert] Request failed.', 'warn'); }
+}
+
+async function actUnbanIp(ip) {
+  streamLog('[Remove Ban] Purging ' + ip + ' ...', 'info');
+  try {
+    const r = await fetch(API + '/api/unban', {
+      method: 'POST', credentials: 'include',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ ip }),
+    });
+    const d = await r.json();
+    streamLog('[Remove Ban] ' + (d.was_banned ? ip + ' removed.' : ip + ' was not banned.'), 'ok');
+    loadEvents(); loadStatus(); loadHoneytokenHistory();
+  } catch { streamLog('[Remove Ban] Failed.', 'warn'); }
+}
+
+async function actReportIp(ip) {
+  streamLog('[AbuseIPDB] Submitting report for ' + ip + ' ...', 'warn');
+  try {
+    const r = await fetch(API + '/api/report-abuse', {
+      method: 'POST', credentials: 'include',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ ip }),
+    });
+    const d = await r.json();
+    if (d.success) streamLog('[AbuseIPDB] mode=' + d.mode + ' ip=' + ip, 'ok');
+    else           streamLog('[AbuseIPDB] Failed: ' + (d.error || JSON.stringify(d)), 'warn');
+  } catch { streamLog('[AbuseIPDB] Request failed.', 'warn'); }
+}
+
+// ── LOGOUT ────────────────────────────────────────────────────────────────────
+async function doLogout() {
+  sessionStorage.clear();
+  await fetch(API + '/api/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
+  window.location.replace('/app/home');
+}
+
+// ── ML ANOMALY SCORE DISTRIBUTION GRAPH ──────────────────────────────────────
+// Singleton Chart.js instance so re-runs destroy and re-create cleanly.
+let _mlChartInstance = null;
+
+// Kernel Density Estimation: returns y-values over a fixed x-grid [0,1]
+// Uses a Gaussian kernel so we get smooth curves instead of jagged bars.
+function _kde(scores, bandwidth, xGrid) {
+  const n = scores.length;
+  return xGrid.map(x => {
+    const sum = scores.reduce((acc, xi) => {
+      const u = (x - xi) / bandwidth;
+      return acc + Math.exp(-0.5 * u * u) / (Math.sqrt(2 * Math.PI));
+    }, 0);
+    return sum / (n * bandwidth);
+  });
+}
+
+// Choose an appropriate KDE bandwidth (Silverman's rule of thumb)
+function _bandwidth(scores) {
+  const n = scores.length;
+  if (n < 2) return 0.05;
+  const mean = scores.reduce((a, b) => a + b, 0) / n;
+  const std  = Math.sqrt(scores.reduce((a, b) => a + (b - mean) ** 2, 0) / n);
+  return 1.06 * std * Math.pow(n, -0.2);
+}
+
+async function loadMLGraph() {
+  const btn    = document.getElementById('btn-load-graph');
+  const status = document.getElementById('graph-status');
+  const ph     = document.getElementById('chart-placeholder');
+
+  btn.disabled   = true;
+  btn.textContent = '⏳ Running simulation…';
+  status.textContent = 'Fitting IsolationForest and scoring 400 samples…';
+  status.style.color = 'var(--wn)';
+
+  try {
+    const r = await fetch(API + '/api/ml/distribution-graph', { credentials: 'include' });
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({}));
+      status.textContent = 'Error ' + r.status + ': ' + (e.error || 'server error');
+      status.style.color = 'var(--dr)';
+      btn.disabled = false;
+      btn.textContent = '↺ Retry';
+      return;
+    }
+    const d = await r.json();
+
+    const normalScores = d.normal_scores || [];
+    const attackScores = d.attack_scores || [];
+    const threshold    = d.threshold     || 0.85;
+    const socThresh    = d.soc_threshold || 0.50;
+
+    if (!normalScores.length || !attackScores.length) {
+      status.textContent = 'No scores returned from server.';
+      status.style.color = 'var(--dr)';
+      btn.disabled = false;
+      btn.textContent = '↺ Retry';
+      return;
+    }
+
+    // ── Build x-axis grid (200 points across [0, 1]) ────────────────────
+    const GRID_N = 200;
+    const xGrid  = Array.from({ length: GRID_N }, (_, i) => i / (GRID_N - 1));
+
+    const bwN = _bandwidth(normalScores);
+    const bwA = _bandwidth(attackScores);
+    const yNormal = _kde(normalScores, bwN, xGrid);
+    const yAttack = _kde(attackScores, bwA, xGrid);
+
+    // Normalise to area = 1 so both curves are on comparable vertical scale
+    const areaScale = 1 / (GRID_N - 1);
+    const sumN = yNormal.reduce((a, b) => a + b, 0) * areaScale || 1;
+    const sumA = yAttack.reduce((a, b) => a + b, 0) * areaScale || 1;
+    const yNorm = yNormal.map(v => v / sumN);
+    const yAtk  = yAttack.map(v => v / sumA);
+
+    // ── Destroy previous chart if present ───────────────────────────────
+    if (_mlChartInstance) { _mlChartInstance.destroy(); _mlChartInstance = null; }
+    if (ph) ph.style.display = 'none';
+
+    const ctx = document.getElementById('mlChart').getContext('2d');
+
+    // Threshold annotation lines (drawn as extra 1-element datasets with
+    // pointRadius:0 so they appear as vertical rules via the annotation
+    // plugin — but since we're not loading the annotation plugin we draw
+    // them as fill-between trick: two zero-height lines at the threshold x)
+    // Instead we use a clean approach: add them as vertical line datasets
+    // by building a 2-point dataset at x = threshold index.
+    function _threshIdx(xVal) {
+      return Math.round(xVal * (GRID_N - 1));
+    }
+    const maxY = Math.max(...yNorm, ...yAtk) * 1.12;
+
+    // Vertical threshold line data: NaN everywhere except at the threshold x
+    function _vline(xVal) {
+      return xGrid.map((x, i) => {
+        const idx = _threshIdx(xVal);
+        return i === idx ? 0 : (i === idx + 1 ? maxY : NaN);
+      });
+    }
+
+    _mlChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: xGrid.map(v => v.toFixed(3)),
+        datasets: [
+          {
+            label: 'Normal Traffic',
+            data: yNorm,
+            borderColor: 'rgba(63,185,80,0.95)',
+            backgroundColor: 'rgba(63,185,80,0.15)',
+            borderWidth: 2.5,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 0,
+            order: 2,
+          },
+          {
+            label: 'Attack Traffic',
+            data: yAtk,
+            borderColor: 'rgba(248,81,73,0.95)',
+            backgroundColor: 'rgba(248,81,73,0.13)',
+            borderWidth: 2.5,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 0,
+            order: 1,
+          },
+          {
+            label: 'SOC Alert Threshold (0.50)',
+            data: _vline(socThresh),
+            borderColor: 'rgba(227,179,65,0.9)',
+            borderWidth: 2,
+            borderDash: [6, 4],
+            fill: false,
+            pointRadius: 0,
+            spanGaps: false,
+            order: 0,
+          },
+          {
+            label: 'SOAR Auto-Ban Threshold (0.85)',
+            data: _vline(threshold),
+            borderColor: 'rgba(248,81,73,1)',
+            borderWidth: 2.5,
+            borderDash: [8, 4],
+            fill: false,
+            pointRadius: 0,
+            spanGaps: false,
+            order: 0,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 600 },
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            display: true,
+            labels: {
+              color: '#c9d1d9',
+              font: { size: 11, family: "'Segoe UI', system-ui, sans-serif" },
+              usePointStyle: true,
+              pointStyleWidth: 14,
+            },
+          },
+          tooltip: {
+            backgroundColor: '#0d1117',
+            borderColor: '#21262d',
+            borderWidth: 1,
+            titleColor: '#c9d1d9',
+            bodyColor: '#8b949e',
+            callbacks: {
+              title: items => 'Score: ' + items[0].label,
+              label: item => {
+                if (item.dataset.label.includes('Threshold')) return null;
+                return item.dataset.label + ': ' + item.raw.toFixed(4);
+              },
+            },
+          },
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Anomaly Score (0 = Normal  →  1 = Maximum Anomaly)',
+              color: '#8b949e',
+              font: { size: 11 },
+            },
+            ticks: {
+              color: '#8b949e',
+              maxTicksLimit: 11,
+              callback: (val, idx) => (idx % 20 === 0 ? xGrid[idx].toFixed(1) : ''),
+            },
+            grid: { color: 'rgba(33,38,45,0.8)' },
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Density',
+              color: '#8b949e',
+              font: { size: 11 },
+            },
+            ticks: { color: '#8b949e', maxTicksLimit: 6 },
+            grid: { color: 'rgba(33,38,45,0.8)' },
+            min: 0,
+          },
+        },
+      },
+    });
+
+    // ── Render statistics tables ─────────────────────────────────────────
+    function _statRows(stats, tbody) {
+      if (!stats) return;
+      const rows = [
+        ['Mean Score',          stats.mean],
+        ['Std Deviation',       stats.std],
+        ['Min',                 stats.min],
+        ['Median (p50)',        stats.p50],
+        ['p90',                 stats.p90],
+        ['p99',                 stats.p99],
+        ['Max',                 stats.max],
+        ['Above Auto-Ban (≥0.85)', stats.above_threshold],
+      ];
+      tbody.innerHTML = rows.map(([k, v]) =>
+        `<tr>
+          <td style="color:var(--mu);padding:4px 6px;font-size:11px">${k}</td>
+          <td style="color:var(--tx);padding:4px 6px;font-size:11px;font-family:monospace;text-align:right">${v}</td>
+        </tr>`
+      ).join('');
+    }
+    _statRows(d.normal_stats, document.getElementById('normal-stats-tbody'));
+    _statRows(d.attack_stats,  document.getElementById('attack-stats-tbody'));
+    document.getElementById('stats-grid').style.display      = 'grid';
+    document.getElementById('threshold-legend').style.display = '';
+
+    // ── Update status bar ────────────────────────────────────────────────
+    const sep = (
+      d.attack_stats && d.normal_stats
+        ? ' | Separation: normal p99=' + d.normal_stats.p99
+          + ' vs attack mean=' + d.attack_stats.mean
+        : ''
+    );
+    status.textContent = '✓ Graph rendered. Baseline=' + (d.baseline_size || 200)
+      + ' samples, Test=' + (d.test_size || 200) + ' each.' + sep
+      + (d.model_source ? '  |  Model: ' + d.model_source : '');
+    status.style.color = 'var(--ok)';
+    streamLog('[ML] Anomaly distribution graph rendered successfully.' + sep, 'ok');
+
+  } catch (err) {
+    status.textContent = 'Fetch failed: ' + err.message;
+    status.style.color = 'var(--dr)';
+    streamLog('[ML] Distribution graph fetch failed: ' + err, 'warn');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '↺ Re-run Simulation';
+  }
+}
+
+// Initialise badge on load
+refreshBadge();
+
+// ── ABUSEIPDB MODE BADGE ──────────────────────────────────────────────────────
+fetch(API + '/api/status', { credentials: 'include' })
+  .then(r => r.ok ? r.json() : null)
+  .then(d => {
+    if (!d) return;
+    const el = document.getElementById('abuseipdb-mode');
+    const mode = d.abuseipdb_mode || 'offline_mock';
+    el.innerHTML = '<span class="dot ' + (mode === 'live' ? 'dot-ok' : 'dot-wn') + '"></span> AbuseIPDB: ' + mode.toUpperCase();
+  })
+  .catch(() => {});
+
+// ── BASELINE TIMELINE CHART ───────────────────────────────────────────────────
+// Streams anomaly_score vs baseline_threshold into a live Chart.js line chart.
+// Points are coloured green (normal) or red (anomaly) based on is_anomaly flag.
+// A horizontal reference line is drawn at baseline_threshold = 0.50.
+
+const BL_MAX_POINTS  = 120;   // rolling window of data points kept on chart
+const BL_POLL_MS     = 5000;  // poll interval in milliseconds
+const BL_THRESHOLD   = 0.50;  // matches BehaviorScorer.BASELINE_THRESHOLD
+
+let _blChart        = null;   // Chart.js instance (singleton)
+let _blTimer        = null;   // setInterval handle
+let _blRunning      = false;  // polling state
+let _blPointCount   = 0;      // total points received since last clear
+
+// ── Chart initialisation ─────────────────────────────────────────────────────
+function _blInitChart() {
+  const ph = document.getElementById('baseline-placeholder');
+  if (ph) ph.style.display = 'none';
+
+  if (_blChart) return; // already initialised
+
+  const ctx = document.getElementById('baselineChart').getContext('2d');
+
+  // Main score line dataset
+  const scoreDataset = {
+    label: 'Anomaly Score',
+    data: [],
+    borderColor: ctx => ctx.raw && ctx.raw.y >= BL_THRESHOLD
+      ? 'rgba(248,81,73,0.9)' : 'rgba(63,185,80,0.9)',
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    pointRadius: 4,
+    pointHoverRadius: 6,
+    pointBackgroundColor: [],  // filled per-point in update
+    pointBorderColor: [],
+    fill: false,
+    tension: 0.35,
+    segment: {
+      // Colour each segment based on whether either endpoint exceeds threshold
+      borderColor: ctx => {
+        const y0 = ctx.p0.parsed.y;
+        const y1 = ctx.p1.parsed.y;
+        return (y0 >= BL_THRESHOLD || y1 >= BL_THRESHOLD)
+          ? 'rgba(248,81,73,0.85)'
+          : 'rgba(63,185,80,0.85)';
+      },
+    },
+    order: 1,
+  };
+
+  // Baseline threshold reference line dataset (constant horizontal)
+  const threshDataset = {
+    label: 'Baseline Threshold (0.50)',
+    data: [],           // filled as points are added
+    borderColor: 'rgba(227,179,65,0.9)',
+    borderWidth: 2,
+    borderDash: [8, 4],
+    pointRadius: 0,
+    fill: false,
+    tension: 0,
+    order: 0,
+  };
+
+  _blChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: [], datasets: [scoreDataset, threshDataset] },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 300 },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          display: true,
+          labels: {
+            color: '#c9d1d9',
+            font: { size: 11, family: "'Segoe UI', system-ui, sans-serif" },
+            usePointStyle: true,
+          },
+        },
+        tooltip: {
+          backgroundColor: '#0d1117',
+          borderColor: '#21262d',
+          borderWidth: 1,
+          titleColor: '#c9d1d9',
+          bodyColor: '#8b949e',
+          callbacks: {
+            title: items => 'Time: ' + items[0].label,
+            label: item => {
+              if (item.datasetIndex === 1) return 'Threshold: ' + BL_THRESHOLD.toFixed(2);
+              const v = item.raw;
+              return 'Score: ' + (typeof v === 'object' ? v.y : v).toFixed(6)
+                + (item.raw >= BL_THRESHOLD ? '  ⚠ ANOMALY' : '  ✓ Normal');
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Time (UTC)',
+            color: '#8b949e',
+            font: { size: 11 },
+          },
+          ticks: {
+            color: '#8b949e',
+            maxTicksLimit: 12,
+            maxRotation: 30,
+          },
+          grid: { color: 'rgba(33,38,45,0.8)' },
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Anomaly Score  (0 = Normal  →  1 = Maximum Anomaly)',
+            color: '#8b949e',
+            font: { size: 11 },
+          },
+          min: 0,
+          max: 1,
+          ticks: {
+            color: '#8b949e',
+            stepSize: 0.1,
+            callback: v => v.toFixed(1),
+          },
+          grid: { color: 'rgba(33,38,45,0.8)' },
+        },
+      },
+    },
+  });
+}
+
+// ── Push a new data point ─────────────────────────────────────────────────────
+function _blPushPoint(timestamp, score, isAnomaly) {
+  if (!_blChart) _blInitChart();
+
+  // Format label as HH:MM:SS UTC
+  const d = new Date(timestamp);
+  const label = d.toISOString().split('T')[1].split('.')[0];
+
+  // Rolling window
+  if (_blChart.data.labels.length >= BL_MAX_POINTS) {
+    _blChart.data.labels.shift();
+    _blChart.data.datasets[0].data.shift();
+    _blChart.data.datasets[0].pointBackgroundColor.shift();
+    _blChart.data.datasets[0].pointBorderColor.shift();
+    _blChart.data.datasets[1].data.shift();
+  }
+
+  // Colour: red if anomaly, green if normal
+  const ptColor = isAnomaly ? 'rgba(248,81,73,0.95)' : 'rgba(63,185,80,0.95)';
+  _blChart.data.labels.push(label);
+  _blChart.data.datasets[0].data.push(score);
+  _blChart.data.datasets[0].pointBackgroundColor.push(ptColor);
+  _blChart.data.datasets[0].pointBorderColor.push(ptColor);
+  _blChart.data.datasets[1].data.push(BL_THRESHOLD); // constant line
+
+  _blChart.update('none'); // 'none' = no animation for smooth streaming
+}
+
+// ── Build telemetry payload from slider values ────────────────────────────────
+function _blBuildPayload() {
+  const reqRate  = parseFloat(document.getElementById('bl-req-rate').value)  || 2.0;
+  const clickMs  = parseFloat(document.getElementById('bl-click-ms').value)  || 200.0;
+  const sessMs   = parseFloat(document.getElementById('bl-session-ms').value) || 5000.0;
+  return {
+    click_speed_intervals: [clickMs, clickMs * 1.1, clickMs * 0.9],
+    page_path_weights:     [0.5, 0.5],
+    sequence_transitions:  [1, 2],
+    session_duration_ms:   sessMs,
+    request_rate_per_sec:  reqRate,
+  };
+}
+
+// ── Single poll cycle ─────────────────────────────────────────────────────────
+async function _blPoll() {
+  const statusEl = document.getElementById('baseline-status');
+  const countEl  = document.getElementById('baseline-count');
+  try {
+    const r = await fetch(API + '/api/telemetry/score', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(_blBuildPayload()),
+    });
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({}));
+      statusEl.textContent = 'Error ' + r.status + ': ' + (e.error || 'server error');
+      statusEl.style.color = 'var(--dr)';
+      return;
+    }
+    const d = await r.json();
+    const score     = d.anomaly_score;
+    const threshold = d.baseline_threshold;
+    const isAnomaly = d.is_anomaly;
+    const ts        = d.timestamp;
+
+    _blPointCount++;
+    _blPushPoint(ts, score, isAnomaly);
+
+    // Update status line
+    const scoreStr = score.toFixed(6);
+    const statusStr = isAnomaly ? '⚠ ANOMALY' : '✓ Normal';
+    statusEl.textContent = statusStr + '  |  Score: ' + scoreStr + '  |  Threshold: ' + threshold;
+    statusEl.style.color = isAnomaly ? 'var(--dr)' : 'var(--ok)';
+    countEl.textContent = _blPointCount + ' samples';
+
+    // Append to log table
+    _blLogRow(ts, score, threshold, isAnomaly);
+
+  } catch (err) {
+    statusEl.textContent = 'Fetch failed: ' + err.message;
+    statusEl.style.color = 'var(--dr)';
+    streamLog('[Baseline] Telemetry score fetch failed: ' + err.message, 'warn');
+  }
+}
+
+// ── Append a row to the Recent Score Log table ────────────────────────────────
+function _blLogRow(ts, score, threshold, isAnomaly) {
+  const tbody = document.getElementById('baseline-log-tbody');
+  // Remove placeholder row on first data
+  if (tbody.rows.length === 1 && tbody.rows[0].cells.length === 1) {
+    tbody.innerHTML = '';
+  }
+  const tr = document.createElement('tr');
+  const tsFmt = ts ? new Date(ts).toISOString().replace('T',' ').split('.')[0] + ' UTC' : '--';
+  const statusBadge = isAnomaly
+    ? '<span class="badge bd-dr">ANOMALY</span>'
+    : '<span class="badge bd-ok">Normal</span>';
+  tr.innerHTML =
+    '<td style="color:var(--mu);font-size:11px;white-space:nowrap">' + esc(tsFmt) + '</td>' +
+    '<td style="font-family:monospace;color:' + (isAnomaly ? 'var(--dr)' : 'var(--ok)') + '">'
+      + score.toFixed(6) + '</td>' +
+    '<td style="font-family:monospace;color:var(--wn)">' + threshold.toFixed(2) + '</td>' +
+    '<td>' + statusBadge + '</td>';
+  // Prepend so newest is at top, cap at 200 rows
+  tbody.insertBefore(tr, tbody.firstChild);
+  while (tbody.rows.length > 200) tbody.removeChild(tbody.lastChild);
+}
+
+// ── Start / Stop toggle ───────────────────────────────────────────────────────
+function baselineToggle() {
+  const btn    = document.getElementById('btn-baseline-start');
+  const clearB = document.getElementById('btn-baseline-clear');
+  const status = document.getElementById('baseline-status');
+
+  if (!_blRunning) {
+    // Start
+    _blRunning = true;
+    _blInitChart();
+    btn.textContent   = '⏸ Pause Feed';
+    clearB.style.display = '';
+    status.textContent = 'Live feed active — polling every 5 s...';
+    status.style.color = 'var(--ok)';
+    streamLog('[Baseline] Live telemetry feed started.', 'ok');
+    _blPoll(); // immediate first sample
+    _blTimer = setInterval(_blPoll, BL_POLL_MS);
+  } else {
+    // Stop
+    _blRunning = false;
+    clearInterval(_blTimer);
+    _blTimer = null;
+    btn.textContent   = '▶ Resume Feed';
+    status.textContent = 'Feed paused.';
+    status.style.color = 'var(--mu)';
+    streamLog('[Baseline] Live telemetry feed paused.', 'warn');
+  }
+}
+
+// ── Clear history ─────────────────────────────────────────────────────────────
+function baselineClear() {
+  if (_blChart) {
+    _blChart.data.labels = [];
+    _blChart.data.datasets.forEach(ds => {
+      ds.data = [];
+      if (ds.pointBackgroundColor) ds.pointBackgroundColor = [];
+      if (ds.pointBorderColor)     ds.pointBorderColor = [];
+    });
+    _blChart.update('none');
+  }
+  _blPointCount = 0;
+  document.getElementById('baseline-count').textContent = '';
+  document.getElementById('baseline-log-tbody').innerHTML =
+    '<tr><td colspan="4" style="color:var(--mu);text-align:center;padding:10px">No data yet.</td></tr>';
+  const ph = document.getElementById('baseline-placeholder');
+  if (ph) ph.style.display = '';
+  streamLog('[Baseline] Chart history cleared.', 'info');
+}
+
+// ── Preset buttons ────────────────────────────────────────────────────────────
+function baselinePreset(type) {
+  if (type === 'normal') {
+    document.getElementById('bl-req-rate').value = '1.5';
+    document.getElementById('bl-req-rate-val').textContent = '1.5';
+    document.getElementById('bl-click-ms').value = '250';
+    document.getElementById('bl-click-ms-val').textContent = '250';
+    document.getElementById('bl-session-ms').value = '8000';
+    document.getElementById('bl-session-ms-val').textContent = '8000';
+    streamLog('[Baseline] Preset: Normal Traffic.', 'ok');
+  } else {
+    document.getElementById('bl-req-rate').value = '180';
+    document.getElementById('bl-req-rate-val').textContent = '180';
+    document.getElementById('bl-click-ms').value = '5';
+    document.getElementById('bl-click-ms-val').textContent = '5';
+    document.getElementById('bl-session-ms').value = '300';
+    document.getElementById('bl-session-ms-val').textContent = '300';
+    streamLog('[Baseline] Preset: Attack Traffic (scanner simulation).', 'warn');
+  }
+}
+</script>
+</body>
+</html>
